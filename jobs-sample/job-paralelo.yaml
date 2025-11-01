@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-paralelo
+spec:
+  completions: 5
+  parallelism: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: paralelo-container
+          image: busybox:latest
+          command: ["sh", "-c", "echo Procesando tarea: $(date)"]

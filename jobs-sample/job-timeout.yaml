@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-timeout
+spec:
+  activeDeadlineSeconds: 10
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: sleep-container
+          image: busybox:latest
+          command: ["sh", "-c", "sleep 30"]

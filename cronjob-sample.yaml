@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+metadata:
+  name: nombre-cronjob
+spec:
+  schedule: "*/5 * * * *" # expresion cron para ejecutar el job (en este caso se ejecuta cada 5 min )
+  successfulJobsHistoryLimit: 3 # Cantidad de Jobs exitosos que se van a guardar en el historial
+  failedJobsHistoryLimit: 1 # Cantidad de Jobs fallidos que se van a guardar en el historial
+  suspend: false # Si esta seteado en true quiere ser decir que pausa el cron
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: nombre-container
+              image: nombre-image
+              command: ["comando"]

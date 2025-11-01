@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nombre-job
+spec:
+  completions: 1 # Numero total de pods exitosos requeridos para completar el job
+  parallelism: 1 # Numero de pods que corren al mismo tiempo
+  backoffLimit: 5 # Numero de veces que puede reintentar un pod fallido
+  activeDeadlineSeconds: 100 # Tiempo maximo en segundos que puede correr el Job
+  template:
+    spec:
+      restartPolicy: Never # Tenemos Never / OnFailure 
+      containers:
+        - name: nombre-container
+          image: image-script
+          command: ["comando a ejecutar"]

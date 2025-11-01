@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-echo
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: hello-container
+          image: busybox:latest
+          command: ["echo", "Hello world desde un Job"]
