@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-replace
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        spec: 
+          restartPolicy: Never
+          containers:
+            - name: replace-container
+              image: busybox:latest
+              command: ["sh", "-c", "echo Inicio Replace;sleep 90; echo fin"]

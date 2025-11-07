@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-forbid
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec: 
+          restartPolicy: Never
+          containers:
+            - name: forbid-container
+              image: busybox:latest
+              command: ["sh", "-c", "echo Ejecuntando mas tiempo....; sleep 90"]

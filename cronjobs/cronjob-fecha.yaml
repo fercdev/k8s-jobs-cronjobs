@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-fecha
+spec:
+  schedule: "*/2 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec: 
+          restartPolicy: Never
+          containers:
+            - name: fecha-container
+              image: busybox:latest
+              command: ["sh", "-c", "date"]

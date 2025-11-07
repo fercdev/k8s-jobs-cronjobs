@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-allow
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Allow
+  jobTemplate:
+    spec:
+      template:
+        spec: 
+          restartPolicy: Never
+          containers:
+            - name: allow-container
+              image: busybox:latest
+              command: ["sh", "-c", "echo Inicio Allow;sleep 90; echo fin"]
