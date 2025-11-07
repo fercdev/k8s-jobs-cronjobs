@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-limite
+spec:
+  schedule: "* * * * *"
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec: 
+          restartPolicy: Never
+          containers:
+            - name: fecha-container
+              image: busybox:latest
+              command: ["echo", "Ejecutando mensaje cada min"]
