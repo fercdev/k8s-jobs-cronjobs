@@ -1,0 +1,145 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secrets
+  namespace: demodb
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: rootpwd123
+  MYSQL_DATABASE: sampledb
+  MYSQL_USER: appuser
+  MYSQL_PASSWORD: appuserpas123
+  BACKUP_USER: backupuser
+  BACKUP_PASSWORD: backuppass123
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv
+  namespace: demodb
+spec:
+  capacity: 
+    storage: 6Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/mysql
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: demodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  volumeName: mysql-pv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-backup-pvc
+  namespace: demodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-st
+  namespace: demodb
+spec:
+  serviceName: mysql-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+          name: mysql
+        envFrom:
+          - secretRef:
+              name: mysql-secrets
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-init
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-init
+          configMap:
+            name: mysql-init-sql
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 3Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-headless-service
+  namespace: demodb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: mysql
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  namespace: demodb
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: mysql-backup
+              image: mysql:8.0
+              envFrom:
+                - secretRef:
+                    name: mysql-secrets
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Iniciando backup de la db..."
+                  mysqldump -h mysql-headless-service \
+                    -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} \
+                    > /backup/backup-$(date +%F-%H-%M).sql
+                  echo "Backup finalizado"
+              volumeMounts:
+                - name: backup-volume
+                  mountPath: /backup
+          volumes:
+            - name: backup-volume
+              hostPath:
+                path: /data/mysql-backups
+                type: DirectoryOrCreate
